@@ -1,143 +1,143 @@
-//selectors
-const todoInput = document.querySelector(".todo-input");
-const todoButton = document.querySelector(".todo-button");
-const todoList = document.querySelector(".todo-list");
-const filterOption = document.querySelector(".filter-todo");
+const listsContainer = document.querySelector('[data-lists]')
+const newListForm = document.querySelector('[data-new-list-form]')
+const newListInput = document.querySelector('[data-new-list-input]')
+const deleteListButton = document.querySelector('[data-delete-list-button]')
+const listDisplayContainer = document.querySelector('[data-list-display-container]')
+const listTitleElement = document.querySelector('[data-list-title]')
+const listCountElement = document.querySelector('[data-list-count]')
+const tasksContainer = document.querySelector('[data-tasks]')
+const taskTemplate = document.getElementById('task-template')
+const newTaskForm = document.querySelector('[data-new-task-form]')
+const newTaskInput = document.querySelector('[data-new-task-input]')
+const clearCompleteTasksButton = document.querySelector('[data-clear-complete-tasks-button]')
 
-//event listeners
-document.addEventListener("DOMContentLoaded", getTodos);
-todoButton.addEventListener("click", addTodo);
-todoList.addEventListener("click", deleteCheck);
-filterOption.addEventListener("click", filterTodo);
+const LOCAL_STORAGE_LIST_KEY = 'task.lists'
+const LOCAL_STORAGE_SELECTED_LIST_ID_KEY = 'task.selectedListId'
+let lists = JSON.parse(localStorage.getItem(LOCAL_STORAGE_LIST_KEY)) || []
+let selectedListId = localStorage.getItem(LOCAL_STORAGE_SELECTED_LIST_ID_KEY)
 
-//functions
-function addTodo(event) {
-  //prevent form submission
-  event.preventDefault();
-  //todo DIV
-  const todoDiv = document.createElement("div");
-  todoDiv.classList.add("todo");
-  //create LI
-  const newTodo = document.createElement("li");
-  newTodo.innerText = todoInput.value;
-  newTodo.classList.add("todo-item");
-  todoDiv.appendChild(newTodo);
-  //add todo to localstorage
-  saveLocalTodos(todoInput.value);
-  //checkmark button
-  const completedButton = document.createElement("button");
-  completedButton.innerHTML = '<i class="fas fa-check"></i>';
-  completedButton.classList.add("complete-btn");
-  todoDiv.appendChild(completedButton);
-  //trash button
-  const trashButton = document.createElement("button");
-  trashButton.innerHTML = '<i class="fas fa-trash"></i>';
-  trashButton.classList.add("trash-btn");
-  todoDiv.appendChild(trashButton);
-  //append to list
-  todoList.appendChild(todoDiv);
-  //clear todo input value
-  todoInput.value = "";
+listsContainer.addEventListener('click', e => {
+  if (e.target.tagName.toLowerCase() === 'li') {
+    selectedListId = e.target.dataset.listId
+    saveAndRender()
+  }
+})
+
+tasksContainer.addEventListener('click', e => {
+  if (e.target.tagName.toLowerCase() === 'input' ) {
+    const selectedList = lists.find(list => list.id === selectedListId)
+    const selectedTask = selectedList.tasks.find(task => task.id === e.target.id)
+    selectedTask.complete = e.target.checked
+    save()
+    renderTaskCount(selectedList)
+  }
+})
+
+clearCompleteTasksButton.addEventListener('click', e => {
+  const selectedList = lists.find(list => list.id === selectedListId)
+  selectedList.tasks = selectedList.tasks.filter(task => !task.complete)
+  saveAndRender()
+})
+
+deleteListButton.addEventListener('click', e => {
+  lists = lists.filter(list => list.id !== selectedListId)
+  selectedListId = null
+  saveAndRender()
+})
+
+newListForm.addEventListener('submit', e => {
+  e.preventDefault()
+  const listName = newListInput.value;
+  if (listName == null || listName === '') return
+  const list = createList(listName)
+  newListInput.value = null
+  lists.push(list)
+  saveAndRender()
+})
+
+newTaskForm.addEventListener('submit', e => {
+  e.preventDefault()
+  const taskName = newTaskInput.value;
+  if (taskName == null || taskName === '') return
+  const task = createTask(taskName)
+  newTaskInput.value = null
+  const selectedList = lists.find(list => list.id === selectedListId)
+  selectedList.tasks.push(task)
+  saveAndRender()
+})
+
+function createList(name) {
+  return { id: Date.now().toString(), name: name, tasks: [] }
 }
 
-function deleteCheck(e) {
-  const item = e.target;
-  //delete todo
-  if (item.classList[0] === "trash-btn") {
-    const todo = item.parentElement;
-    //animation
-    todo.classList.add("fall");
-    removeLocalTodos(todo);
-    todo.addEventListener("transitionend", function () {
-      todo.remove();
-    });
-  }
-  //checkmark
-  if (item.classList[0] === "complete-btn") {
-    const todo = item.parentElement;
-    todo.classList.toggle("completed");
+function createTask(name) {
+  return { id: Date.now().toString(), name: name, complete: false }
+}
+
+function saveAndRender() {
+  save()
+  render()
+}
+
+function save() {
+  localStorage.setItem(LOCAL_STORAGE_LIST_KEY, JSON.stringify(lists))
+  localStorage.setItem(LOCAL_STORAGE_SELECTED_LIST_ID_KEY, selectedListId)
+}
+
+function render() {
+  clearElement(listsContainer) //to add a single task, not add another list of the same tasks
+  renderLists()
+  const selectedList = lists.find(list => list.id === selectedListId)
+  if (selectedListId == null) {
+    listDisplayContainer.style.display = 'none'
+  } else {
+    listDisplayContainer.style.display = ''
+    listTitleElement.innerText = selectedList.name
+    renderTaskCount(selectedList)
+    clearElement(tasksContainer)
+    renderTasks(selectedList)
   }
 }
 
-function filterTodo(e) {
-  const todos = todoList.childNodes;
-  // console.log(todos)
-  todos.forEach(function (todo) {
-    switch (e.target.value) {
-      case "all":
-        todo.style.display = "flex";
-        break;
-      case "completed":
-        if (todo.classList.contains("completed")) {
-          todo.style.display = "flex";
-        } else {
-          todo.style.display = "none";
-        }
-        break;
-      case "uncompleted":
-        if (!todo.classList.contains("completed")) {
-          todo.style.display = "flex";
-        } else {
-          todo.style.display = "none";
-        }
-        break;
+function renderTasks(selectedList) {
+    selectedList.tasks.forEach(task => {
+    const taskElement = document.importNode(taskTemplate.content, true)
+    const checkbox = taskElement.querySelector('input')
+    checkbox.id = task.id
+    checkbox.checked = task.complete
+    const label = taskElement.querySelector('label')
+    label.htmlFor = task.id
+    label.append(task.name)
+    tasksContainer.appendChild(taskElement)
+  })
+}
+
+
+function renderTaskCount(selectedList) {
+  const incompleteTaskCount = selectedList.tasks.filter(task => !task.complete).length
+  const taskString = incompleteTaskCount === 1 ? "task" : "tasks"
+  listCountElement.innerText = `${incompleteTaskCount} ${taskString} remaining`
+}
+
+function renderLists() {
+  lists.forEach(list => {
+    const listElement = document.createElement('li')
+    //add a data attribute to the list element
+    listElement.dataset.listId = list.id
+    listElement.classList.add('list-name')
+    listElement.innerText = list.name;
+    //when a list is selected
+    if (list.id === selectedListId) {
+      listElement.classList.add('active-list')
     }
-  });
+    listsContainer.appendChild(listElement)
+  })
 }
 
-function saveLocalTodos(todo) {
-  //check if things are already stored in the storage
-  let todos;
-  if (localStorage.getItem("todos") === null) {
-    todos = [];
-  } else {
-    todos = JSON.parse(localStorage.getItem("todos"));
+function clearElement(element) {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild)
   }
-  todos.push(todo);
-  localStorage.setItem("todos", JSON.stringify(todos));
 }
 
-function getTodos() {
-  let todos;
-  //check if things are already stored in the storage
-  if (localStorage.getItem("todos") === null) {
-    todos = [];
-  } else {
-    todos = JSON.parse(localStorage.getItem("todos"));
-  }
-  todos.forEach(function (todo) {
-    //todo DIV
-    const todoDiv = document.createElement("div");
-    todoDiv.classList.add("todo");
-    //create LI
-    const newTodo = document.createElement("li");
-    newTodo.innerText = todo;
-    newTodo.classList.add("todo-item");
-    todoDiv.appendChild(newTodo);
-    //checkmark button
-    const completedButton = document.createElement("button");
-    completedButton.innerHTML = '<i class="fas fa-check"></i>';
-    completedButton.classList.add("complete-btn");
-    todoDiv.appendChild(completedButton);
-    //trash button
-    const trashButton = document.createElement("button");
-    trashButton.innerHTML = '<i class="fas fa-trash"></i>';
-    trashButton.classList.add("trash-btn");
-    todoDiv.appendChild(trashButton);
-    //append to list
-    todoList.appendChild(todoDiv);
-  });
-}
-
-function removeLocalTodos(todo) {
-  let todos;
-  //check if things are already stored in the storage
-  if (localStorage.getItem("todos") === null) {
-    todos = [];
-  } else {
-    todos = JSON.parse(localStorage.getItem("todos"));
-  }
-  const todoIndex = todo.children[0].innerText;
-  todos.splice(todos.indexOf(todoIndex),1);
-  localStorage.setItem('todos', JSON.stringify(todos))
-}
+render()

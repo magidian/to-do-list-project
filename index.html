@@ -9,32 +9,63 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:ital@1&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
-    <link rel="stylesheet" href="style.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+      integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
     <title>To do list</title>
   </head>
   <body>
+    <h1 class="title">To Do List</h1>
 
-    <header>
-        <h1>To Do List</h1>
-    </header>
-    <form>
-        <input type='text' class='todo-input'>
-        <button class="todo-button" type="submit">
-            <i class="fas fa-plus-square"></i>
-        </button>
-        <div class="select">
-            <select name='todos' class='filter-todo'>
-                <option value='all'>All</option>
-                <option value='completed'>Completed</option>
-                <option value='uncompleted'>Uncompleted</option>
-            </select>
-        </div>
-    </form>
-    <div class="todo-container">
-        <ul class="todo-list"></ul>
+    <div class="all-tasks">
+      <h2 class="task-list-title">My Lists</h2>
+      <ul class="task-list" data-lists></ul>
+
+      <form data-new-list-form>
+        <input
+          data-new-list-input
+          type="text"
+          class="new list"
+          placeholder="new list name"
+        />
+        <button class="btn create" type="submit">+</button>
+      </form>
     </div>
 
+    <div class="todo-list" data-list-display-container>
+      <div class="todo-header">
+        <h2 class="list-title" data-list-title>Youtube</h2>
+        <p class="task-count" data-list-count>3 tasks remaining</p>
+      </div>
+      <div class="todo-body">
+        <div class="tasks" data-tasks></div>
+
+        <div class="new-task-creator">
+          <form data-new-task-form>
+            <input data-new-task-input type="text" class="new task" placeholder="new task name" />
+            <button class="btn create" type="submit">+</button>
+          </form>
+        </div>
+
+        <div class="clear-delete">
+          <button class="btn delete" data-clear-complete-tasks-button>Clear completed tasks</button>
+          <button class="btn delete" data-delete-list-button>
+            Delete list
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <template id="task-template">
+      <div class="task">
+        <input type="checkbox" />
+        <label><span class="custom-checkbox"></span></label>
+      </div>
+    </template>
     <script src="app.js"></script>
   </body>
 </html>
