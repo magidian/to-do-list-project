@@ -61,6 +61,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  listDisplayContainer.style.display = "none";
+})
+
 newListForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const listName = newListInput.value;
@@ -74,7 +78,7 @@ newListForm.addEventListener("submit", (e) => {
 newTaskForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const taskName = newTaskInput.value;
-  if (taskName == null || taskName === "") return;
+  if (taskName === null || taskName === "") return;
   const task = createTask(taskName);
   newTaskInput.value = null;
   const selectedList = lists.find((list) => list.id === selectedListId);
@@ -104,10 +108,10 @@ function render() {
   clearElement(listsContainer); //to add a single task, not add another list of the same tasks
   renderLists();
   const selectedList = lists.find((list) => list.id === selectedListId);
-  if (selectedListId == null) {
+  if (selectedListId === null) {
     listDisplayContainer.style.display = "none";
   } else {
-    listDisplayContainer.style.display = "";
+    listDisplayContainer.style.display = '';
     listTitleElement.innerText = selectedList.name;
     renderTaskCount(selectedList);
     clearElement(tasksContainer);
